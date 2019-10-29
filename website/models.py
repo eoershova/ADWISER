@@ -2,6 +2,7 @@
 import re
 import treetaggerwrapper
 
+
 def models(user_input):
     tagger = treetaggerwrapper.TreeTagger(TAGLANG='en', TAGDIR='tt/')
 
@@ -11,6 +12,9 @@ def models(user_input):
         # prepare text for splitting into sentences
         user_input = re.sub(r'\n', ' ', user_input)
         user_input = re.sub(r'\s\s', ' ', user_input)
+        user_input = re.sub(r'\s\:', ':', user_input)
+        user_input = re.sub(r'\s\;', ';', user_input)
+        user_input = re.sub(r'\s\,', ',', user_input)
         user_input = re.sub(r'\.\s', '.\n', user_input)
         user_input = re.sub(r'\?\s', '?\n', user_input)
         user_input = re.sub(r'!\s', '!\n', user_input)
@@ -29,12 +33,13 @@ def models(user_input):
                 spstr = ''.join(sp)
                 sentence_data.append(spstr)
             data.append(sentence_data)
-        # sent[0] - plaintext sentence, sent[1] - tagged sentence
         clean_data = []
         for sentence in data:
             if sentence != []:
                 clean_data.append(sentence)
         data = clean_data
+        print(data)
+        # sent[0] - plaintext sentence, sent[1] - tagged sentence
         return data
 
     def open_file(filename):
@@ -68,6 +73,11 @@ def models(user_input):
             if mis:
                 err = re.findall('<(.+?)\s...>', mis.group())
                 err = ' '.join(err)
+                err = re.sub('\s\:\s', ': ', err)
+                err = re.sub('\s\;\s', '; ', err)
+                err = re.sub('\s\,\s', ', ', err)
+                err = re.sub('\sn\'t\s', 'n\'t ', err)
+                err = re.sub('\s\s', ' ', err)
                 sent.append([err, recommend])
         return data
 
@@ -90,28 +100,30 @@ def models(user_input):
         trigger8 = r'((Over|over)\s\d+years)'
         triggers = [trigger1, trigger2, trigger3, trigger4, trigger5, trigger6, trigger7, trigger8]
         for sent in data:
-            # pp + time
-            if re.search(perfect, sent[1], flags=re.IGNORECASE):
-                if re.search(r'(do|did)\snot\shave', sent[0]):
-                    continue
-                if re.search(r'(have|has)\s(no|not|got)', sent[0]):
-                    continue
-                else:
-                    for trigger in triggers:
-                        if re.search(trigger, sent[0]):
-                            pp_comment = 'Present Perfect does not go along with indication of past time.'
-                            for clause in re.findall(perfect, sent[1]):
-                                perfect_clause = ' '.join(clause)
-                                perfect_clause = re.sub(r'\s\s', ' ', perfect_clause)
-                                perfect_clause = re.sub(r'\sn\'t', 'n\'t', perfect_clause)
-                                if re.search('[a-zA-z]+', perfect_clause):
-                                    sent.append([perfect_clause, pp_comment])
-                            error_span = re.findall(trigger, sent[0])
-                            sent.append([error_span[0][0], pp_comment])
-                    # consider that
-            if re.search(r'(C|c)onsider\sthat', sent[0]):
-                sent.append([re.findall(r'((?:C|c)onsider\sthat)', sent[0])[0],
-                                     'You may have wrongly used the verb CONSIDER with THAT'])
+            print(sent)
+            if sent != []:
+                # pp + time
+                if re.search(perfect, sent[1], flags=re.IGNORECASE):
+                    if re.search(r'(do|did)\snot\shave', sent[0]):
+                        continue
+                    if re.search(r'(have|has)\s(no|not|got)', sent[0]):
+                        continue
+                    else:
+                        for trigger in triggers:
+                            if re.search(trigger, sent[0]):
+                                pp_comment = 'Present Perfect does not go along with indication of past time.'
+                                for clause in re.findall(perfect, sent[1]):
+                                    perfect_clause = ' '.join(clause)
+                                    perfect_clause = re.sub(r'\s\s', ' ', perfect_clause)
+                                    perfect_clause = re.sub(r'\sn\'t', 'n\'t', perfect_clause)
+                                    if re.search('[a-zA-z]+', perfect_clause):
+                                        sent.append([perfect_clause, pp_comment])
+                                error_span = re.findall(trigger, sent[0])
+                                sent.append([error_span[0][0], pp_comment])
+                        # consider that
+                if re.search(r'(C|c)onsider\sthat', sent[0]):
+                    sent.append([re.findall(r'((?:C|c)onsider\sthat)', sent[0])[0],
+                                 'You may have wrongly used the verb CONSIDER with THAT'])
         return data
 
     def inversion(data):
@@ -127,8 +139,8 @@ def models(user_input):
             mis = re.search(pattern, tsent, flags=re.IGNORECASE)
             if mis:
                 err = re.findall('<(.+?)\s...>', mis.group())
-                err = ' '.join(err)
-                sent.append([err, 'You may have used the wrong word order.'])
+                error = re.search(err[0] + '.*?' + err[-1], text).group()
+                sent.append([error, 'Just a reminder that this type of expression requires inversion.'])
         return data
 
     def prepositions(data):
@@ -153,8 +165,8 @@ def models(user_input):
                 if mis:
                     if 'DTQ>' not in mis.groups(1)[0]:
                         err = re.findall('<(.+?)\s...>', mis.group())
-                        err = ' '.join(err)
-                        sent.append([err, 'You may have used the wrong word order.'])
+                        error = re.search(err[0] + '.*?' + err[-1], text).group()
+                        sent.append([error, 'You may have used the wrong word order.'])
         return data
 
     def conditionals(data):
@@ -178,8 +190,8 @@ def models(user_input):
                 if not (re.search(trg, tsent, flags=re.IGNORECASE) or re.search(trg1, tsent, flags=re.IGNORECASE)
                         or re.search(trg3, text, flags=re.IGNORECASE)):
                     err = re.findall('<(.+?)\s...>', mis.group())
-                    err = ' '.join(err)
-                    sent.append([err, 'Apparently, it\'s a wrong conditional'])
+                    error = re.search(err[0] + '.*?' + err[-1], text).group()
+                    sent.append([error, 'You may have used the wrong form of the verb in the condition.'])
         return data
 
     def barely(data):
@@ -204,8 +216,13 @@ def models(user_input):
             mis = re.search(pattern, tsent)
             if mis:
                 err = re.findall('<(.+?)\s...>', mis.group())
-                error = re.search(err[0] + '.*?' + err[-1], text).group()
-                sent.append([error, 'Just a reminder that this type of expression requires inversion.'])
+                err = ' '.join(err)
+                err = re.sub('\s\:\s', ': ', err)
+                err = re.sub('\s\;\s', '; ', err)
+                err = re.sub('\s\,\s', ', ', err)
+                err = re.sub('\sn\'t\s', 'n\'t ', err)
+                err = re.sub('\s\s', ' ', err)
+                sent.append([err, 'Just a reminder that this type of expression requires inversion.'])
         return data
 
     def never(data):
@@ -223,7 +240,7 @@ def models(user_input):
                     and 'Hardly a ' not in text:
                 err = re.findall('<(.+?)\s...>', mis.group())
                 error = re.search(err[0] + '.*?' + err[-1], text).group()
-                sent.append([error, 'Just a reminder that this type of expression requires inversion.'])
+                sent.append([error, 'You may need inverted word order in this sentence.'])
         return data
 
     def no_sooner(data):
@@ -234,8 +251,8 @@ def models(user_input):
             mis = re.search(pattern, tsent)
             if mis:
                 err = re.findall('<(.+?)\s...>', mis.group())
-                err = ' '.join(err)
-                sent.append([err, 'Just a reminder that this type of expression requires inversion.'])
+                error = re.search(err[0] + '.*?' + err[-1], text).group()
+                sent.append([error, 'You may need inverted word order in this sentence.'])
         return data
 
     def extra_comma(data):
@@ -396,7 +413,6 @@ def models(user_input):
                         output.append(annotation)
         return output
 
-
     ## for the sake of having a list of models on display
     text = user_input
     data = preprocessing(text)
@@ -415,13 +431,13 @@ def models(user_input):
     return output
 
 
-
 def main():
-    user_input = 'First of all, we need to know why did the level of crime boost up In the period of 12 years (from 2000 to 2012) statistic has been changed a lot.'
+    with open('test.txt', 'r', encoding='utf-8') as file:
+        text = file.read()
+    user_input = text
 
     m = models(user_input)
-    print(m)
-
+    #print(m)
 
 
 if __name__ == '__main__':
