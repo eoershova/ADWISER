@@ -191,8 +191,8 @@ def models(user_input):
             mis = re.search(pattern, tsent)
             if mis:
                 err = re.findall('<(.+?)\s...>', mis.group())
-                err = ' '.join(err)
-                sent.append([err, 'Just a reminder that this type of expression requires inversion.'])
+                error = re.search(err[0] + '.*?' + err[-1], text).group()
+                sent.append([error, 'Just a reminder that this type of expression requires inversion.'])
         return data
 
     def had(data):
@@ -204,8 +204,8 @@ def models(user_input):
             mis = re.search(pattern, tsent)
             if mis:
                 err = re.findall('<(.+?)\s...>', mis.group())
-                err = ' '.join(err)
-                sent.append([err, 'Just a reminder that this type of expression requires inversion.'])
+                error = re.search(err[0] + '.*?' + err[-1], text).group()
+                sent.append([error, 'Just a reminder that this type of expression requires inversion.'])
         return data
 
     def never(data):
@@ -222,8 +222,8 @@ def models(user_input):
                     and not re.search('Hardly any(?:body|one|thing)?', text) \
                     and 'Hardly a ' not in text:
                 err = re.findall('<(.+?)\s...>', mis.group())
-                err = ' '.join(err)
-                sent.append([err, 'Just a reminder that this type of expression requires inversion.'])
+                error = re.search(err[0] + '.*?' + err[-1], text).group()
+                sent.append([error, 'Just a reminder that this type of expression requires inversion.'])
         return data
 
     def no_sooner(data):
