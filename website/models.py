@@ -375,6 +375,76 @@ def models(user_input):
         data_for_return = find_mistakes(data, pattern, recommend)
         return data_for_return
 
+
+    def find_punkt_errors(data):
+
+        re_find_b = [r"(From [a-z].? (?:point of view|viewpoint|perspective)).*",
+                     r"(From [A-Z][a-z]+'s (?:point of view|viewpoint|perspective)).*", \
+                     r'(To [a-z]{2,5} mind)', r'(For (?:example|instance)).*', r'(However|Nevertheless|Consequently|To start with|Firstly| \
+    Secondly|Thirdly|Moreover|On the other hand|In other words|In short|Surprisingly| \
+    Unsurprisingly|Hopefully|Interestingly|Obviously|In conclusion|To conclude|To sum up| \
+    Thus|Of course).*']
+
+        re_check_b = [r'From [a-z]{2,5} (?:point of view|viewpoint|perspective), ',
+                      r"From [A-Z][a-z]+'s (?:point of view|viewpoint|perspective), ", \
+                      r'To [a-z]{2,5} mind, ', r'For (?:example|instance), ', r'(?:However|Nevertheless|Consequently|To start with|Firstly| \
+        Secondly|Thirdly|Moreover|On the other hand|In other words|In short|Surprisingly| \
+        Unsurprisingly|Hopefully|Interestingly|Obviously|In conclusion|To conclude|To sum up| \
+        Thus|Of course), ']
+
+        re_find_m = [r"\w*? (from [a-z]{2,5} (?:point of view|viewpoint|perspective)).*",
+                     r'\w*? (to [a-z]{2,5} mind).*', \
+                     r'\w*? (for (?:example|instance)).*', \
+                     r'(however|nevertheless|consequently|to start with|firstly|secondly|thirdly|moreover|on the other hand|in other words|in short|surprisingly|\
+    unsurprisingly|hopefully|interestingly|obviously|in conclusion|to conclude|to sum up|thus|of course).*']
+        re_check_m = [r'.*, from [a-z]{2,5} (?:point of view|viewpoint|perspective), ', r'.*, to [a-z]{2,5} mind, ', \
+                      r'.*, for (?:example|instance), ',
+                      r'(?:however|nevertheless|consequently|to start with|firstly|secondly|thirdly|moreover|on the other hand|in other words|in short|surprisingly|unsurprisingly|hopefully|interestingly|obviously|in conclusion|to conclude|to sum up|thus|of course), ']
+        re_trigger1 = [r'.* (?:вЂ”|-|:) from [a-z]{2,5} (?:point of view|viewpoint|perspective), ',
+                       r'.* (?:вЂ”|-|:) to [a-z]{2,5} mind, ', \
+                       r'.* (?:вЂ”|-|:) for (?:example|instance), ', r'.* (?:вЂ”|-|:) (?:however|nevertheless|consequently|to start with|firstly| \
+        secondly|thirdly|moreover|on the other hand|in other words|in short|surprisingly| \
+        unsurprisingly|hopefully|interestingly|obviously|in conclusion|to conclude|to sum up| \
+        thus|of course), ']
+        re_trigger2 = [r'.*, from [a-z]{2,5} (?:point of view|viewpoint|perspective) (?:вЂ”|-|:|.)',
+                       r'.*, to [a-z]{2,5} mind (?:вЂ”|-|:|.) (?:вЂ”|-|:|.)', \
+                       r'.*, for (?:example|instance) (?:вЂ”|-|:|.)', r'.*, (?:however|nevertheless|consequently|to start with|firstly| \
+        secondly|thirdly|moreover|on the other hand|in other words|in short|surprisingly| \
+        unsurprisingly|hopefully|interestingly|obviously|in conclusion|to conclude|to sum up| \
+        thus|of course) (?:вЂ”|-|:|.)']
+
+        for sent in data:
+            for pattern in re_find_b:
+                if re.search(pattern, sent[0]):
+                    found = 0
+                    for true_pattern in re_check_b:
+                        if re.search(true_pattern, sent[0]):
+                            found = 1
+                            break
+                    if found == 0:
+                        # print(sent)
+                        sent.append([re.findall(pattern, sent[0])[0], 'A comma seems to be missing'])
+                    # print(sent)
+            for pattern in re_find_m:
+                if re.search(pattern, sent[0]):
+                    found = 0
+                    for true_pattern in re_check_m:
+                        if re.search(true_pattern, sent[0]):
+                            found = 1
+                            break
+                    for also_true_pattern in re_trigger1:
+                        if re.search(also_true_pattern, sent[0]):
+                            found = 1
+                            break
+                    for also_true_pattern in re_trigger2:
+                        if re.search(also_true_pattern, sent[0]):
+                            found = 1
+                            break
+                    if found == 0:
+                        sent.append([re.findall(pattern, sent[0])[0], 'A comma seems to be missing'])
+
+        return data
+
     def output_maker(data):
         output = []
         for sent in data:
@@ -426,18 +496,18 @@ def models(user_input):
     data = no_sooner(data)
     data = extra_comma(data)
     data = past_con(data)
+    data = find_punkt_errors(data)
     output = output_maker(data)
 
     return output
 
 
 def main():
-    with open('test.txt', 'r', encoding='utf-8') as file:
-        text = file.read()
-    user_input = text
+    user_input = 'First of all, we need to know why did the level of crime boost up In the period of 12 years (from 2000 to 2012) statistic has been changed a lot.'
 
     m = models(user_input)
-    #print(m)
+    print(m)
+
 
 
 if __name__ == '__main__':
