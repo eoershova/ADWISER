@@ -1,0 +1,92 @@
+html, body {
+	overflow: auto;
+}
+
+@font-face {
+font-family: Open Sans;
+src: url(fonts/sansreg.ttf);
+}
+
+@font-face {
+font-family: Ubuntu Mono;
+src: url(fonts/ubuntumono.ttf);
+}
+
+a:link {
+text-decoration: none;
+color: rgb(190,16,123);
+opacity: 1;
+transition: opacity .15s ease-in-out;
+-moz-transition: opacity .15s ease-in-out;
+-webkit-transition: opacity .15s ease-in-out;
+-ms-transition: opacity .15s ease-in-out;
+-o-transition: opacity .15s ease-in-out;
+}
+
+a:hover {
+opacity: 0.7;
+}
+
+a:visited {
+color: rgb(190,16,123);
+}
+
+#h1 {
+color: black;
+font-family: Open Sans;
+font-weight: bold;
+text-align: center;
+font-size: 26pt;
+}
+
+.txt {
+color: black;
+font-family: Open Sans;
+font-size: 11pt;
+}
+
+.bot {
+font-family: Ubuntu Mono;
+}
+
+.token {
+display: inline-block;
+}
+
+ul {
+list-style-type: none;
+}
+
+.innerlink {
+border-bottom: 1px dashed;
+}
+
+.nulla {
+background: #C7D6D7;
+display: inline-block;
+}
+
+.unus {
+background: #C3DAC3;
+display: inline-block;
+}
+
+.duo {
+background: #FDD1BE;
+display: inline-block;
+}
+
+.tres {
+background: #FFF3CE;
+display: inline-block;
+}
+
+.quattuor {
+background: #DCC1D5;
+display: inline-block;
+}
+
+.quinque {
+background: #D7CDC7;
+display: inline-block;
+}

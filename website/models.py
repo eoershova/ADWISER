@@ -1,3 +1,4 @@
+# coding=utf-8
 import re
 import treetaggerwrapper
 
@@ -413,7 +414,8 @@ def models(user_input):
 def main():
     user_input = 'First of all, we need to know why did the level of crime boost up In the period of 12 years (from 2000 to 2012) statistic has been changed a lot.'
 
-    models(user_input)
+    m = models(user_input)
+    print(m)
 
 
 
