@@ -378,13 +378,16 @@ def models(user_input):
                     annotation.append(error_span)
                     annotation.append("1")
                     annotation.append(comment)
-                    output.append(annotation)
+                    if annotation[0] != '':
+                        output.append(annotation)
+            
                 else:
                     annotation = []
                     annotation.append(i)
                     annotation.append("0")
                     annotation.append("")
-                    output.append(annotation)
+                    if annotation[0] != '':
+                        output.append(annotation)
         return output
 
 
