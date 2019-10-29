@@ -30,6 +30,11 @@ def models(user_input):
                 sentence_data.append(spstr)
             data.append(sentence_data)
         # sent[0] - plaintext sentence, sent[1] - tagged sentence
+        clean_data = []
+        for sentence in data:
+            if sentence != []:
+                clean_data.append(sentence)
+        data = clean_data
         return data
 
     def open_file(filename):
@@ -381,7 +386,7 @@ def models(user_input):
                     annotation.append(comment)
                     if annotation[0] != '':
                         output.append(annotation)
-            
+
                 else:
                     annotation = []
                     annotation.append(i)
