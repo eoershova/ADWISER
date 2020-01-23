@@ -308,7 +308,31 @@ def models(user_input):
 
         return data
 
-    def find_pcon_mistakes(data, pattern, recommend):
+# 23.01.2020
+    def find_mistakes_pc(data, pattern, start_exp, recommend):
+        for sent in data:
+            # text = sent[0]
+            tagged_sent = sent[1]
+            flag1 = False
+            if re.search(pattern, tagged_sent, flags=re.IGNORECASE):
+                errexp = [m.group() for m in re.finditer(pattern, tagged_sent, flags=re.IGNORECASE)]
+                flag1 = True
+            if flag1:
+                for err in errexp:
+                    long_exp = re.search(start_exp, err, flags=re.IGNORECASE)
+                    if long_exp:
+                        new_err = re.findall('<(.+?)\s...>', long_exp.group(1))
+                        error = ' '.join(new_err)
+                        sent.append([error, recommend])
+        return data
+
+    def past_con(data):
+        # identifying errors in the use of Past Continuous
+        # The number /was increasing/ between the years 1700 and 2000.
+        # start_exp = was/were(VBD) (+ not/n't XX0?) particip1 (ing)(VBG|VDG|VHG|VVG)
+
+        # often wrongly tagged as AJ0:
+
         v1 = '(?:<fluctuating\s...>)'
         v2 = '(?:<increasing\s...>)'
         v3 = '(?:<decreasing\s...>)'
@@ -319,33 +343,83 @@ def models(user_input):
         # add as VVG
         wrong_v = '(?:' + v1 + '|' + v2 + '|' + v3 + '|' + v4 + '|' + v5 + '|' + v6 + ')'
 
-        rand_words = '(?:<[^>]+\s...>)*'
+        # rand_words = '(?:<[^>]+\s...>)*'  # сколько угодно либо ни одного
 
-        start_exp = nounp() + rand_words + '(' + '(?:<[^>]+\s(?:VBD)>)(?:<[^>]+\s(?:XX0)>)?' + '(?:' + '(?:<[^>]+\s(?:VBG|VDG|VHG|VVG)>)' + '|' + wrong_v + ')' + ')' + rand_words
+        rand_words2 = '(?:<[^>]+\s...>)*?'  # сколько угодно либо ни одного ОГРАНИЧИЛА ЖАДНОСТЬ!!!
+        rand_words_1 = '(?:<[^>]+\s...>)'  # ровно 1 рандом слово
 
-        for sent in data:
-            text = sent[0]
-            tagged_sent = sent[1]
-            mis = re.search(pattern, tagged_sent, flags=re.IGNORECASE)
-            if mis:
-                q = mis.group()
-                long_exp = re.search(start_exp, q, flags=re.IGNORECASE)
-                if long_exp:
-                    # shorter version of mistake
-                    new_err = re.sub(long_exp.group(), long_exp.group(1), q)
-                    err = re.findall('<(.+?)\s...>', new_err)
-                    error = re.search(err[0] + '.*?' + err[-1], text).group()
-                    sent.append([error, recommend])
+        # кокие-то слова (но мб и без них) + was/were + not/n't(но мб и без) + -ing form of verbs + кокие-то слова (но мб и без них)
+        start_exp = rand_words2 + '(' + '(?:<[^>]+\s(?:VBD)>)(?:<[^>]+\s(?:XX0)>)?' + '(?:' + '(?:<[^>]+\s(?:VBG|VDG|VHG|VVG)>)' + '|' + wrong_v + ')' + ')' + rand_words2
 
-        return data
+        # tagging '1800.'; 1800s
+        dig1 = '(?:<1[789][0-9][0-9][^>]+\s...>)'
+        dig2 = '(?:<200[0-9][^>]+\s...>)'
+        dig3 = '(?:<201[0-8][^>]+\s...>)'
+
+        dig4 = "(?:<1[789][0-9][0-9]\s...>)(?:<'s ...>)?"
+        dig5 = "(?:<200[0-9]\s...>)(?:<'s ...>)?"
+        dig6 = "(?:<201[0-9]\s...>)(?:<'s ...>)?"
+
+        res_dig = '(?:' + dig1 + '|' + dig2 + '|' + dig3 + '|' + dig4 + '|' + dig5 + '|' + dig6 + ')'
+
+        add_s = '(?:<the\s...>)(?:(?:<end\s...>)|(?:<beginning\s...>)|(?:<start\s...>))(?:<of\s...>)(?:<the\s...)?'
+
+        # 0: in the year [1700-2019]
+        # in the?/1 rand_w [1700-2019]
+        r0_1 = '(?:<in\s...>)(?:<the\s...>)?(?:<year\s...>)?' + res_dig
+        r0_2 = '(?:<in\s...>)' + rand_words_1 + res_dig
+        r0 = '(?:' + r0_1 + '|' + r0_2 + ')'
+
+        # 1: between + the years? + [1700-2019] + and + [1700-2019]
+        # or between + the beginning of the? + [1700-2019] + and + the start of the? + [1700-2019]
+        r1 = '(?:<between\s...>)' + '(?:' + '(?:(?:<the\s...>)(?:<years\s...>))?' + '|' + '(?:' + add_s + ')?' + ')' + res_dig + '(?:<and\s...>)' + '(?:' + add_s + ')?' + rand_words_1 + '?' + res_dig
+
+        # 2: from + the year? + [1700-2019] + to + [1700-2019]
+        r2 = '(?:<from\s...>)' + '(?:' + '(?:(?:<the\s...>)(?:<year\s...>))?' + '|' + '(?:' + add_s + ')?' + ')' + res_dig + '(?:<to\s...>)' + '(?:' + add_s + ')?' + rand_words_1 + '?' + res_dig
+        # 2_1:
+        # from n till/until n
+        # until/till rw? numb
+
+        r2_1_1 = '(?:<from\s...>)' + rand_words_1 + '?' + res_dig + '(?:' + '(?:<till\s...>)' + '|' + '(?:<until\s...>)' + ')' + rand_words_1 + '?' + res_dig
+        r2_1_2 = '(?:' + '(?:<until\s...>)' + '|' + '(?:<till\s...>)' + ')' + rand_words_1 + '?' + res_dig
+
+        r2_1 = '(?:' + r2_1_1 + '|' + r2_1_2 + ')'
+
+        # 3: at|in|during + the + first|second|third|fourth|fifth|initial|last + stage|point|phase|period
+        r3 = '(?:(?:<at\s...>)|(?:<in\s...>)|(?:<during\s...>))' + '(?:' + '(?:' + add_s + ')?' + '|' + '((?:<the\s...>)(?:(?:<first\s...>)|(?:<second\s...>)|(?:<third\s...>)|(?:<fourth\s...>)|(?:<fifth\s...>)|(?:<initial\s...>)|(?:<last\s...>))?)' + ')' + '(?:(?:<stage\s...>)|(?:<point\s...>)|(?:<phase\s...>)|(?:<period\s...>)|(?:<century\s...>)|(?:<decade\s...>)|(?:<year\s...>)|(?:<month\s...>))'
+
+        # 4: from year to year     during this/(all the) period/year(s)/stage/century   during these periods/years/stages  through the years
+        r4_4 = '(?:<from\s...>)(?:<year\s...>)(?:<to\s...>)(?:<year\s...>)'
+        r4_2 = '(?:<during\s...>)' + '(?:' + '(?:<this\s...>)' + '|' + '(?:(?:<all\s...>)(?:<the\s...>))' + ')' + '(?:' + '(?:<year\w\s...>)' + '|' + '(?:<period\s...>)' + '|' + '(?:<stage\s...>)' + '|' + '(?:<century\s...>)' + '|' + '(?:<month\s...>)' + ')'
+        r4_3 = '(?:<during\s...>)' + '(?:' + '(?:<these\s...>)' + '|' + '(?:<those\s...>)' + ')' + '(?:' + '(?:<years\s...>)' + '|' + '(?:<periods\s...>)' + '|' + '(?:<stages\s...>)' + ')'
+        r4_1 = '(?:<through\s...>)(?:<the\s...>)(?:<years\s...>)'
+        r4 = '(?:' + r4_1 + '|' + r4_2 + '|' + r4_3 + r4_4 + ')'
+        contin_exp = '(?:' + r0 + '|' + r1 + '|' + r2 + '|' + r3 + '|' + r4 + '|' + r2_1 + ')'
+
+        # ошибка в starte цифры в конце
+        # np + was/were + not/n't? + ing + from N to N
+        full_exp_stm = start_exp + contin_exp
+
+        # а теперь цифры в начале ошибка в конце
+        # between N and N + np + was/were + not/n't? + ing
+        full_exp_finm = contin_exp + start_exp
+
+        # оба этих случая
+        pattern = '(?:' + full_exp_stm + '|' + full_exp_finm + ')'
+
+        recommend = 'The usage of Past Continuous might be erroneous'
+        data_for_return = find_mistakes_pc(data, pattern, start_exp, recommend)
+        return data_for_return
+
+####################
 
     def find_com_mistakes(data, pattern, recommend):
 
         cth = '(<, PUN><that\s...>)<([^>]+)\s....?>'
         punc = '(?:<[^>]+\sPU.>)'
         sent_end = '(?:<[^>]+\sSENT>)'
-        rand_words_no_pun_no_v_not_obl = '(?:<[^>]+\s[^V][^U].>)*'
-        cif = '(<if\s...>)' + rand_words_no_pun_no_v_not_obl + '<[^>]+\sV..>' + rand_words_no_pun_no_v_not_obl + '(?:' + punc + '|' + sent_end + ')'
+        rand_words_no_pun_not_obl = '(?:<[^>]+\s[^V][^U].>)*'
+        cif = '(<if\s...>)' + rand_words_no_pun_not_obl + '<[^>]+\sV..>' + rand_words_no_pun_not_obl + '(?:' + punc + '|' + sent_end + ')'
 
         for sent in data:
             text = sent[0]
@@ -387,7 +461,7 @@ def models(user_input):
 
         rand_words_no_pun = '(?:<[^>]+\s.[^U].>)+'
 
-        rand_words_no_pun_no_v_not_obl = '(?:<[^>]+\s[^V][^U].>)*'
+        rand_words_no_pun_not_obl = '(?:<[^>]+\s.[^U].>)*'
 
         comma = '(?:<, PUN>)'
         punc = '(?:<[^>]+\sPU.>)'
@@ -395,7 +469,7 @@ def models(user_input):
 
         conj_that = '<that\s...><[^>]+\s....?>'
 
-        conj_if = '<if\s...>' + rand_words_no_pun_no_v_not_obl + '<[^>]+\sV..>' + rand_words_no_pun_no_v_not_obl + '(?:' + punc + '|' + sent_end + ')'
+        conj_if = '<if\s...>' + rand_words_no_pun_not_obl + '<[^>]+\sV..>' + rand_words_no_pun_not_obl + '(?:' + punc + '|' + sent_end + ')'
 
         conj = '(?:' + '(?:<what\s...>)' + '|' + '(?:<how\s...>)' + '|' + '(?:<why\s...>)' + \
                '|' + '(?:<where\s...>)' + '|' + '(?:<when\s...>)' + '|' + '(?:<whether\s...>)' + ')'
@@ -420,104 +494,13 @@ def models(user_input):
         res1 = r0 + r2 + comma + '(?:<that\s...>)'
 
         res_i = '(?:' + res0 + '|' + res1 + ')'
-
-        # think/thinks/thought/believe/believes/believed/
-        # suppose/supposes/supposed/assume/assumes/assumed/suggest/
-        # suggests/suggested/propose/ proposes/proposed
-
-        # verb2 = '(?:' + '(?:<think.?\s...>)' + '|' + '(?:<thought\s...>)' + '|' + '(?:<believe.?\s...>)' + '|' + '(?:<suppose.?\s...>)' +\
-        # '|' + '(?:<assume.?\s...>)' + '|' + '(?:<suggest.?\s...>)' + '|' + '(?:<suggested\s...>)' + '|' + '(?:<propose.?\s...>)' + ')'
-        # p0 = nounp() + verb2 + comma
-
-        # res_exp = '(?:' + res_i + '|' + main_clause_c + '|' + p0 + ')'
-
         pattern = '(?:' + res_i + '|' + main_clause_c + ')'
 
         recommend = 'You may have used a redundant comma in this sentence.'
         data_for_return = find_com_mistakes(data, pattern, recommend)
-        return data_for_return
-
-    def past_con(data):
-        # identifying errors in the use of Past Continuous
-        # The number /was increasing/ between the years 1700 and 2000.
-        # start_exp = np + was/were(VBD) (+ not/n't XX0?) particip1 (ing)(VBG|VDG|VHG|VVG)
-
-        # often wrongly tagged as AJ0:
-
-        v1 = '(?:<fluctuating\s...>)'
-        v2 = '(?:<increasing\s...>)'
-        v3 = '(?:<decreasing\s...>)'
-        v4 = '(?:<remaining\s...>)'
-        v5 = '(?:<rising\s...>)'
-        v6 = '(?:<declining\s...>)'
-
-        # add as VVG
-        wrong_v = '(?:' + v1 + '|' + v2 + '|' + v3 + '|' + v4 + '|' + v5 + '|' + v6 + ')'
-
-        rand_words = '(?:<[^>]+\s...>)*'
-        rand_words_1 = '(?:<[^>]+\s...>)'
-
-        start_exp = nounp() + rand_words + '(?:<[^>]+\s(?:VBD)>)(?:<[^>]+\s(?:XX0)>)?' + '(?:' + '(?:<[^>]+\s(?:VBG|VDG|VHG|VVG)>)' + '|' + wrong_v + ')' + rand_words
-
-        # tagging '1800.'; 1800s
-        dig1 = '(?:<1[789][0-9][0-9].+\s...>)'
-        dig2 = '(?:<200[0-9].+\s...>)'
-        dig3 = '(?:<201[0-8].+\s...>)'
-
-        dig4 = "(?:<1[789][0-9][0-9]\s...>)(?:<'s ...>)?"
-        dig5 = "(?:<200[0-9]\s...>)(?:<'s ...>)?"
-        dig6 = "(?:<201[0-8]\s...>)(?:<'s ...>)?"
-
-        res_dig = '(?:' + dig1 + '|' + dig2 + '|' + dig3 + '|' + dig4 + '|' + dig5 + '|' + dig6 + ')'
-
-        add_s = '(?:<the\s...>)(?:(?:<end\s...>)|(?:<beginning\s...>)|(?:<start\s...>))(?:<of\s...>)(?:<the\s...)?'
-
-        # 0: in the year [1700-2018]
-        # in the?/1 rand_w [1700-2018]
-        r0_1 = '(?:<in\s...>)(?:<the\s...>)?(?:<year\s...>)?' + res_dig
-        r0_2 = '(?:<in\s...>)' + rand_words_1 + res_dig
-        r0 = '(?:' + r0_1 + '|' + r0_2 + ')'
-
-        # 1: between + the years? + [1700-2018] + and + [1700-2018]
-        # or between + the beginning of the? + [1700-2018] + and + the start of the? + [1700-2018]
-        r1 = '(?:<between\s...>)' + '(?:' + '(?:(?:<the\s...>)(?:<years\s...>))?' + '|' + '(?:' + add_s + ')?' + ')' + res_dig + '(?:<and\s...>)' + '(?:' + add_s + ')?' + rand_words_1 + '?' + res_dig
-
-        # 2: from + the year? + [1700-2018] + to + [1700-2018]
-        r2 = '(?:<from\s...>)' + '(?:' + '(?:(?:<the\s...>)(?:<year\s...>))?' + '|' + '(?:' + add_s + ')?' + ')' + res_dig + '(?:<to\s...>)' + '(?:' + add_s + ')?' + rand_words_1 + '?' + res_dig
-        # 2_1:
-        # from n till/until n
-        # until/till rw? numb
-
-        r2_1_1 = '(?:<from\s...>)' + rand_words_1 + '?' + res_dig + '(?:' + '(?:<till\s...>)' + '|' + '(?:<until\s...>)' + ')' + rand_words_1 + '?' + res_dig
-        r2_1_2 = '(?:' + '(?:<until\s...>)' + '|' + '(?:<till\s...>)' + ')' + rand_words_1 + '?' + res_dig
-
-        r2_1 = '(?:' + r2_1_1 + '|' + r2_1_2 + ')'
-
-        # 3: at|in|during + the + first|second|third|fourth|fifth|initial|last + stage|point|phase|period
-        r3 = '(?:(?:<at\s...>)|(?:<in\s...>)|(?:<during\s...>))' + '(?:' + '(?:' + add_s + ')?' + '|' + '((?:<the\s...>)(?:(?:<first\s...>)|(?:<second\s...>)|(?:<third\s...>)|(?:<fourth\s...>)|(?:<fifth\s...>)|(?:<initial\s...>)|(?:<last\s...>))?)' + ')' + '(?:(?:<stage\s...>)|(?:<point\s...>)|(?:<phase\s...>)|(?:<period\s...>)|(?:<century\s...>)|(?:<decade\s...>)|(?:<year\s...>)|(?:<month\s...>))'
-
-        # 4: from year to year     during this/(all the) period/year(s)/stage/century   during these periods/years
-        r4_1 = '(?:<from\s...>)(?:<year\s...>)(?:<to\s...>)(?:<year\s...>)'
-        r4_2 = '(?:<during\s...>)' + '(?:' + '(?:<this\s...>)' + '|' + '(?:(?:<all\s...>)(?:<the\s...>))' + ')' + '(?:' + '(?:<year\w\s...>)' + '|' + '(?:<period\s...>)' + '|' + '(?:<stage\s...>)' + '|' + '(?:<century\s...>)' + '|' + '(?:<month\s...>)' + ')'
-        r4_3 = '(?:<during\s...>)' + '(?:' + '(?:<these\s...>)' + '|' + '(?:<those\s...>)' + ')' + '(?:' + '(?:<years\s...>)' + '|' + '(?:<periods\s...>)' + '|' + '(?:<stages\s...>)' + ')'
-        r4 = '(?:' + r4_1 + '|' + r4_2 + '|' + r4_3 + ')'
-        contin_exp = '(?:' + r0 + '|' + r1 + '|' + r2 + '|' + r3 + '|' + r4 + '|' + r2_1 + ')'
-
-        # РѕС€РёР±РєР° РІ starte С†РёС„СЂС‹ РІ РєРѕРЅС†Рµ
-        # np + was/were + not/n't? + ing + from 5655 to 6766
-        full_exp_stm = start_exp + contin_exp
-
-        # Р° С‚РµРїРµСЂСЊ С†РёС„СЂС‹ РІ РЅР°С‡Р°Р»Рµ РѕС€РёР±РєР° РІ РєРѕРЅС†Рµ
-        # between 6565 and 9889 + np + was/were + not/n't? + ing
-        full_exp_finm = contin_exp + start_exp
-
-        # РѕР±Р° СЌС‚РёС… СЃР»СѓС‡Р°СЏ
-        pattern = '(?:' + full_exp_stm + '|' + full_exp_finm + ')'
-
-        recommend = 'The usage of Past Continious might be erroneous'
-        data_for_return = find_pcon_mistakes(data, pattern, recommend)
 
         return data_for_return
+
 
     def output_maker(data):
         output = []
