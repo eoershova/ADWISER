@@ -124,7 +124,7 @@ def models(user_input):
             if mis:
                 err = re.findall('<(.+?)\s...>', mis.group())
                 error = re.search(err[0] + '.*?' + err[-1], text).group()
-                sent.append([error, 'Just a reminder that this type of expression requires inversion.'])
+                sent.append([error, 'This might me an erroneous use of inversion'])
         return data
 
     def prepositions(data):
