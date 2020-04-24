@@ -175,7 +175,7 @@ def models(user_input):
                         or re.search(trg3, text, flags=re.IGNORECASE)):
                     err = re.findall('<(.+?)\s...>', mis.group())
                     error = re.search(err[0] + '.*?' + err[-1], text).group()
-                    sent.append([error, 'You may have used the wrong form of the verb in the condition.'])
+                    sent.append([error, 'You may have used the wrong form of the verb in the condition. See more examples at http://realec-reference.site/Conditionals'])
         return data
 
     def barely(data):
@@ -501,6 +501,27 @@ def models(user_input):
 
         return data_for_return
 
+    def gerund(data):
+        """ 1) check if one of the gerunds is in the sentence at all (the gerunds are in file mistake_if_followed_by_of.txt)
+            2) check if it is followed by of (not off)
+            3) append ['gerund of', 'comment] to the sent in data
+        """
+        with open('mistake_if_followed_by_of.txt', 'r', encoding='utf-8') as file:
+            raw = file.read()
+            gerunds = raw.split()
+
+        for sent in data:
+            text = sent[0]
+            sent_pos = sent[1]
+            for gerund in gerunds:
+                if gerund in text:
+                    pattern = gerund + ' of '
+                    mis = re.search(pattern, text)
+                    if mis:
+                        sent.append([pattern, 'This gerund needs direct object'])
+        return data
+
+
 
     def output_maker(data):
         output = []
@@ -554,6 +575,7 @@ def models(user_input):
     data = extra_comma(data)
     data = past_con(data)
     data = find_punkt_errors(data)
+    data = gerund(data)
     output = output_maker(data)
 
     return output
