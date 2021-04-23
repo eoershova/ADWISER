@@ -10,4 +10,4 @@ In case of opening project in PyCharm:
 2) VCS-> Get from Version Control - insert URL
 3) pip install -r requirements.txt 
 4) then, run website>tt_install.sh
-5) in case of local usage and debugging in website\main.py -> ```app.run(debug=True)``` in 51 line
+5) in case of local usage and debugging change in website\main.py -> ```app.run(debug=True)``` in 51 line
