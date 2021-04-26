@@ -2,9 +2,9 @@
 
 # Set these paths appropriately
 
-BIN="/home/ivan/ADWISER/website/tt/bin"
-CMD="/home/ivan/ADWISER/website/tt/cmd"
-LIB="/home/ivan/ADWISER/website/tt/lib"
+BIN="/c/Users/Irina/PycharmProjects/ADWISER/website/tt/bin"
+CMD="/c/Users/Irina/PycharmProjects/ADWISER/website/tt/cmd"
+LIB="/c/Users/Irina/PycharmProjects/ADWISER/website/tt/lib"
 
 OPTIONS="-token -lemma -sgml -pt-with-lemma"
 
