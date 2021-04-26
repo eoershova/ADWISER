@@ -162,8 +162,7 @@ def models(user_input):
                             found = re.search(trigger, sent[0], flags=re.I)
                             if found:
                                 pp_comment = 'Present Perfect does not go along with indication of past tense.'
-                                if flag:
-                                    pp_comment = 'Present Perfect Continuous does not go along with indication of past tense.'
+
                                 sent.append([found.group().rstrip(), pp_comment])
                 # consider that
                 if re.search(r'(C|c)onsider\sthat', sent[0]):
