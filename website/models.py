@@ -177,7 +177,7 @@ def models(user_input):
         perfect = have_forms + negative + word + negative + verb_3_form
         perfect_cont = have_forms + word + verb_be + verb_gerund
         # triggers as described in doc
-        trigger1 = r'((in\s|over\s|from\s|between\s)(the\s)?(year|years)?\d*)'
+        trigger1 = r'((in\s|from\s|between\s)(the\s)?(year|years)?\d{3-4})'
         trigger2 = r'((at|in|during)\s(the\s)?(first|second|third|fourth|fifth|initial|last)\
         \s(stage|point|phase|period|year|decade|century))'
         trigger3 = r'((long)?ago)'
@@ -986,6 +986,7 @@ def models(user_input):
     data = nounprep(data)
     data = adj_prep(data)
     data = find_count_errors(data)
+    print(data)
     output = output_maker(data)
     return output
 
