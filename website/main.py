@@ -1,6 +1,6 @@
 from flask import Flask, Markup, request, render_template
 from models import models
-
+import re
 
 def annotate(text):
   ann_strings = models(text)
@@ -14,6 +14,7 @@ def annotate(text):
 
 
 def annotate_print(text):
+    text = re.sub(r'\s\,', ',', text)
     tokens_soup, comments = annotate(text)
     for token in tokens_soup:
          text = text.replace(token[0], chr(8), 1)
@@ -46,9 +47,11 @@ def index():
         return render_template("result.html", annotation=annotation, comments=comments)
     return render_template("main.html")
 
+# if __name__ == '__main__':
+#     import os
+#     app.debug = True
+#     port = int(os.environ.get("PORT", 5000))
+#     app.run(host='0.0.0.0', port=port)
 
 if __name__ == '__main__':
-    import os
-    app.debug = True
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(debug=True)

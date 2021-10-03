@@ -17,17 +17,13 @@ def models(user_input):
         user_input = text
         data = []
         # prepare text for splitting into sentences
-        user_input = re.sub(r'\n\s', '\n', user_input)
-        user_input = re.sub(r'\s\s', ' ', user_input)
-        user_input = re.sub(r'\s:', ':', user_input)
-        user_input = re.sub(r'\s;', ';', user_input)
-        user_input = re.sub(r'\s,', ',', user_input)
+        user_input = re.sub(r'\s\:', ':', user_input)
+        user_input = re.sub(r'\s\;', ';', user_input)
+        user_input = re.sub(r'\s\,', ',', user_input)
         user_input = re.sub(r'\.\s', '.\n', user_input)
         user_input = re.sub(r'\?\s', '?\n', user_input)
-        user_input = re.sub(r'!\s', '!\n', user_input)
-        user_input = re.sub(r'="', '= "', user_input)
-        user_input = re.sub(r'<\S', '< ', user_input)
-        sentences = user_input.split('\n')
+        user_input = re.sub(r'\!\s', '!\n', user_input)
+
 
         sentences = user_input.split('\n')
         # tagging sentences
@@ -49,7 +45,6 @@ def models(user_input):
             if sentence != []:
                 clean_data.append(sentence)
         data = clean_data
-
         return data
 
     def open_file(filename):
