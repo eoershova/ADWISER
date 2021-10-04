@@ -20,8 +20,14 @@ def annotate_print(text):
          text = text.replace(token[0], chr(8), 1)
     for k, token in enumerate(tokens_soup):
         entry = ""
-        if token[1] == 1:
-            entry += '<div class="duo"'
+        if token[1] !=0:
+            if token[1] ==1:
+                entry += '<div class="duo" style="background: #ff8c00"'
+            elif token[1] ==2:
+                entry += '<div class="duo" style="background: #d21f3c"'
+            else:
+                entry += '<div class="duo" style="background: #98fb98"'
+
             if "comment"+str(k) in comments:
                 entry += ' id="' + "comment"+str(k) + 'link"'
                 entry += ' onclick="popupbox(event,'

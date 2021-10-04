@@ -1,7 +1,7 @@
 # coding=utf-8
 import re
 import treetaggerwrapper
-
+import csv
 
 # examples of tags: http://www.natcorp.ox.ac.uk/docs/bnc2guide.htm#pm
 def models(user_input):
@@ -198,7 +198,7 @@ def models(user_input):
                         for trigger in triggers:
                             found = re.search(trigger, sent[0], flags=re.I)
                             if found:
-                                pp_comment = 'Present Perfect does not go along with indication of past tense.'
+                                pp_comment = 'Present Perfect does not go along with indication of past tense'
 
                                 sent.append([found.group().rstrip(), pp_comment])
         return data
@@ -235,7 +235,7 @@ def models(user_input):
                     if 'DTQ>' not in mis.groups(1)[0]:
                         err = re.findall('<(.+?)\s...>', mis.group())
                         error = re.search(err[0] + '.*?' + err[-1], text).group()
-                        sent.append([error, 'You may have used the wrong word order.'])
+                        sent.append([error, 'You may have used the wrong word order'])
         return data
 
     def extra_inversion(data):
@@ -302,7 +302,7 @@ def models(user_input):
             if mis:
                 err = re.findall('<(.+?)\s...>', mis.group())
                 error = re.search(err[0] + '.*?' + err[-1], text).group()
-                sent.append([error, 'Just a reminder that this type of expression requires inversion.'])
+                sent.append([error, 'Just a reminder that this type of expression requires inversion'])
         return data
 
     def had(data):
@@ -320,7 +320,7 @@ def models(user_input):
                 err = re.sub('\s,\s', ', ', err)
                 err = re.sub('\sn\'t\s', 'n\'t ', err)
                 err = re.sub('\s\s', ' ', err)
-                sent.append([err, 'Just a reminder that this type of expression requires inversion.'])
+                sent.append([err, 'Just a reminder that this type of expression requires inversion'])
         return data
 
     def never(data):
@@ -338,7 +338,7 @@ def models(user_input):
                     and 'Hardly a ' not in text:
                 err = re.findall('<(.+?)\s...>', mis.group())
                 error = re.search(err[0] + '.*?' + err[-1], text).group()
-                sent.append([error, 'You may need inverted word order in this sentence.'])
+                sent.append([error, 'You may need inverted word order in this sentence'])
         return data
 
     def no_sooner(data):
@@ -622,7 +622,7 @@ def models(user_input):
         res1 = r0 + r2 + comma + '(?:<that\s...>)'
         res_i = '(?:' + res0 + '|' + res1 + ')'
         pattern = '(?:' + res_i + '|' + main_clause_c + ')'
-        recommend = 'You may have used a redundant comma in this sentence.'
+        recommend = 'You may have used a redundant comma in this sentence'
         data_for_return = find_com_mistakes(data, pattern, recommend)
 
         return data_for_return
@@ -686,7 +686,7 @@ def models(user_input):
                             mis = re.search(pattern, text)
                             if mis:
                                 sent.append([pattern,
-                                             "This noun is frequently used with a different preposition. Check out possible combinations at http://realec-reference.site/articlesByTag/Prepositions"])
+                                             "This noun is frequently used with a different preposition. Check out possible combinations at http://realec-reference.site/articlesByTag/Prepositions "])
         return data
 
     def adj_prep(data):
@@ -723,7 +723,7 @@ def models(user_input):
                             mis = re.search(pattern, text)
                             if mis:
                                 sent.append(
-                                    [pattern, 'You might want to use a different preposition with this adjective.'])
+                                    [pattern, 'You might want to use a different preposition with this adjective'])
         return data
 
     def find_count_errors(data):
@@ -954,7 +954,13 @@ def models(user_input):
                     comment = (re.sub('\[|\]', '', i)).split('COMMENT')[1]
                     annotation = []
                     annotation.append(error_span)
-                    annotation.append("1")
+
+                    with open('./comment-color.txt', mode='r') as csv_file:
+                        reader = csv.DictReader(csv_file)
+                        for com in reader:
+                            if com["Comment"] == comment:
+                                annotation.append(com["Number"])
+                    # annotation.append("1")
                     annotation.append(comment)
                     if annotation[0] != '':
                         output.append(annotation)
@@ -986,7 +992,6 @@ def models(user_input):
     data = nounprep(data)
     data = adj_prep(data)
     data = find_count_errors(data)
-    print(data)
     output = output_maker(data)
     return output
 
