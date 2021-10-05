@@ -695,7 +695,7 @@ def models(user_input):
                     for prep in preps:
                         pattern = (noun + ' ' + prep)
                         if pattern not in nounpreps:
-                            mis = re.search(f'{pattern}[^a-z]', text, flags=re.I)
+                            mis = re.search(f'[^a-z]{pattern}[^a-z]', text, flags=re.I)
                             if mis:
                                 sent.append([pattern,
                                              "This noun is frequently used with a different preposition. Check out possible combinations at http://realec-reference.site/articlesByTag/Prepositions"])
