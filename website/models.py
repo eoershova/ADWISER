@@ -84,6 +84,7 @@ def models(user_input):
         for sent in data:
             words = re.findall(r'\<([a-z]+)\s', sent[1], flags=re.I)
             for word in words:
+                if len(word) <3: continue;
                 if str(spell.correction(word)).lower() != word.lower():
                     candidates = "/".join(spell.candidates(word))
                     sent.append([word, f'Possible spelling error, possible corrections: {candidates}'])
@@ -118,7 +119,7 @@ def models(user_input):
         # <No ITJ><sooner AV0>
         no_sooner = r'<No\sITJ><sooner\sAV0>' + prep_phrases
         # <Not XX0><only AV0>
-        only = r'((<Not\sXX0>)?<[oO]nly\sAV0>)' + prep_phrases
+        only = r'((<Not\sXX0>)<[oO]nly\sAV0>)' + prep_phrases
         little = r'(<Little\sAV0>)' + prep_phrases
         # <Not XX0><until PRP>
         not_until = r'(<Not\sXX0><until\sPRP>)' + prep_phrases
@@ -136,7 +137,7 @@ def models(user_input):
                                    adverbial_or_noun_phrase + noun_phrase, tsent, flags=re.IGNORECASE)
                 if search:
                     found = search.group()
-                    only_five = r'only\s\d'
+                    only_five = r'only\s(\d|one)'
                     if re.search('Little by little', sent[0], flags=re.IGNORECASE) or re.search(only_five, sent[0], flags=re.IGNORECASE):
                         continue
                     error = ' '.join(re.sub(r'\s[A-Z]*\$?,?\d?>', r'', found,
@@ -731,7 +732,7 @@ def models(user_input):
                     for prep in prepositions:
                         pattern = (adj + ' ' + prep)
                         if pattern not in adj_phrase:
-                            mis = re.search(f'{pattern}[^a-z]', text, flags=re.I)
+                            mis = re.search(f'[^a-z]{pattern}[^a-z]', text, flags=re.I)
                             if mis:
                                 sent.append(
                                     [pattern, 'You might want to use a different preposition with this adjective'])
