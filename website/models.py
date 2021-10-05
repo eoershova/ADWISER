@@ -2,6 +2,7 @@
 import re
 import treetaggerwrapper
 import csv
+from spellchecker import SpellChecker
 
 # examples of tags: http://www.natcorp.ox.ac.uk/docs/bnc2guide.htm#pm
 def models(user_input):
@@ -17,6 +18,7 @@ def models(user_input):
         user_input = text
         data = []
         # prepare text for splitting into sentences
+        user_input = re.sub(r'\r', '', user_input)
         user_input = re.sub(r'\s\:', ':', user_input)
         user_input = re.sub(r'\s\;', ';', user_input)
         user_input = re.sub(r'\s\,', ',', user_input)
@@ -77,6 +79,16 @@ def models(user_input):
         noun_phrase = '(?:' + noun_phrase2 + '|' + noun_phrase1 + '|' + noun_phrase3 + ')'
         return noun_phrase
 
+    def spell_check(data):
+        spell = SpellChecker()
+        for sent in data:
+            words = re.findall(r'\<([a-z]+)\s', sent[1], flags=re.I)
+            for word in words:
+                if str(spell.correction(word)).lower() != word.lower():
+                    candidates = "/".join(spell.candidates(word))
+                    sent.append([word, f'Possible spelling error, possible corrections: {candidates}'])
+
+        return data
     def inversion(data):
 
         """Return updated list of sentences in case of inversion errors
@@ -124,13 +136,12 @@ def models(user_input):
                                    adverbial_or_noun_phrase + noun_phrase, tsent, flags=re.IGNORECASE)
                 if search:
                     found = search.group()
-                    if re.search('Little by little', sent[0], flags=re.IGNORECASE):
+                    only_five = r'only\s\d'
+                    if re.search('Little by little', sent[0], flags=re.IGNORECASE) or re.search(only_five, sent[0], flags=re.IGNORECASE):
                         continue
                     error = ' '.join(re.sub(r'\s[A-Z]*\$?,?\d?>', r'', found,
                                             count=0, flags=0).split('<')[1:])
-
                     error = re.sub(r' , ', ', ', error)
-
                     sent.append([error, 'This might me an erroneous use of inversion'])
                 else:
                     wrong_verb_form = re.search(trigger + r'((<(did)\s[A-Z]+>|<\w+?\sVM0))', sent[1], flags=re.I)
@@ -647,9 +658,9 @@ def models(user_input):
             for gerund in gerunds:
                 if gerund in text:
                     pattern = gerund + ' of '
-                    mis = re.search(pattern, text)
+                    mis = re.search(f'[^a-z]{pattern}', text, flags = re.I)
                     if mis:
-                        sent.append([pattern, 'This gerund needs direct object'])
+                        sent.append([pattern.rstrip(), 'This gerund needs direct object'])
         return data
 
     def nounprep(data):
@@ -683,10 +694,10 @@ def models(user_input):
                     for prep in preps:
                         pattern = (noun + ' ' + prep)
                         if pattern not in nounpreps:
-                            mis = re.search(pattern, text)
+                            mis = re.search(f'{pattern}[^a-z]', text, flags=re.I)
                             if mis:
                                 sent.append([pattern,
-                                             "This noun is frequently used with a different preposition. Check out possible combinations at http://realec-reference.site/articlesByTag/Prepositions "])
+                                             "This noun is frequently used with a different preposition. Check out possible combinations at http://realec-reference.site/articlesByTag/Prepositions"])
         return data
 
     def adj_prep(data):
@@ -720,7 +731,7 @@ def models(user_input):
                     for prep in prepositions:
                         pattern = (adj + ' ' + prep)
                         if pattern not in adj_phrase:
-                            mis = re.search(pattern, text)
+                            mis = re.search(f'{pattern}[^a-z]', text, flags=re.I)
                             if mis:
                                 sent.append(
                                     [pattern, 'You might want to use a different preposition with this adjective'])
@@ -924,7 +935,7 @@ def models(user_input):
                                 if len(re.findall(numbers, q)) == 1:
                                     no_tt = re.sub(r'[A-Z0-9]{3}|<|>', '',
                                                    re.findall(numbers, q)[0][0])
-                                    if no_tt:
+                                    if no_tt and not re.search(r'\d', no_tt):
                                         sent.append(
                                             [no_tt.rstrip(),
                                              "Check the form of the noun or noun group used with numbers"])
@@ -951,16 +962,20 @@ def models(user_input):
             for i in original.split('@'):
                 if i.startswith('['):
                     error_span = (re.sub('\[|\]', '', i)).split('COMMENT')[0]
+
                     comment = (re.sub('\[|\]', '', i)).split('COMMENT')[1]
                     annotation = []
                     annotation.append(error_span)
 
-                    with open('./comment-color.txt', mode='r') as csv_file:
+                    with open(r'./comment-color.txt', mode='r') as csv_file:
                         reader = csv.DictReader(csv_file)
                         for com in reader:
                             if com["Comment"] == comment:
                                 annotation.append(com["Number"])
-                    # annotation.append("1")
+                    if comment.startswith('Possible spelling error'):
+                                annotation.append(4)
+
+                    #annotation.append("1")
                     annotation.append(comment)
                     if annotation[0] != '':
                         output.append(annotation)
@@ -976,6 +991,7 @@ def models(user_input):
 
     text = user_input
     data = preprocessing(text)
+    data = spell_check(data)
     data = pp_time(data)
     data = inversion(data)
     data = extra_inversion(data)
@@ -992,6 +1008,7 @@ def models(user_input):
     data = nounprep(data)
     data = adj_prep(data)
     data = find_count_errors(data)
+
     output = output_maker(data)
     return output
 
