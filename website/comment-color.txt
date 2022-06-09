@@ -1,0 +1,25 @@
+Comment,HEX,Number
+This might me an erroneous use of inversion,#ff8c00,1
+You may have used the wrong word order,#ff8c00,1
+Possible spelling error,#FFF633,4
+Just a reminder that this type of expression requires inversion,#ff8c00,1
+You may need inverted word order in this sentence,#ff8c00,1
+Check the form of the noun used with many/few/fewer/several or both,#ff8c00,1
+Check the form of the noun used with bit/amount or deal + of,#ff8c00,1
+Check the form of the noun used with number/couple + of,#ff8c00,1
+Check the form of the noun used with number + of,#ff8c00,1
+Check the form of the noun used with little/much/less/the least,#ff8c00,1
+Check the form of the number used with number,#ff8c00,1
+Check the form of the number used with 'one',#ff8c00,1
+Check the form of the noun or noun group used with numbers,#ff8c00,1
+Present Perfect does not go along with indication of past tense,#ff8c00,1
+Present Perfect Continuous does not go along with indication of past tense,#ff8c00,1
+You may have used the wrong form of the verb in the condition. See more examples at http://realec-reference.site/viewArticle/CONDITIONAL%20SENTENCES,#ff8c00,1
+You may have used 'wish' followed by the wrong tense form,#ff8c00,1
+This gerund needs direct object,#ff8c00,1
+A comma seems to be missing,#8b0000,2
+The usage of Past Continuous might be erroneous,#8b0000,1
+You may have used a redundant comma in this sentence,#8b0000,2
+This noun is frequently used with a different preposition. Check out possible combinations at http://realec-reference.site/articlesByTag/Prepositions,#98fb98,3
+You might want to use a different preposition with this adjective,#98fb98,3
+You may have wrongly used the verb CONSIDER with THAT,#98fb98,3
